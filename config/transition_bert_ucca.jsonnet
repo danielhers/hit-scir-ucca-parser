@@ -17,6 +17,12 @@
           "namespace": "actions"
         }
       },
+      "pos_tag_indexers": {
+          "pos_tags": {
+              "type": "single_id",
+              "namespace": "pos_tags"
+          }
+      },
       "arc_tag_indexers": {
         "arc_tags": {
           "type": "single_id",
@@ -45,6 +51,10 @@
         "output_type": "f",
         "trace": 0,
         "cores": 10
+    },
+    "pos_tag_embedding": {
+      "embedding_dim": 25,
+      "vocab_namespace": "pos"
     },
     "action_embedding": {
       "embedding_dim": 50,
@@ -78,7 +88,7 @@
     "num_epochs": 50,
     "grad_norm": 5.0,
     "grad_clipping": 5.0,
-    "patience": 50,
+    "patience": 5,
     "cuda_device": 0,
     "validation_metric": "+all-f",
     "optimizer": {

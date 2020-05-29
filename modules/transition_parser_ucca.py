@@ -61,6 +61,9 @@ class TransitionParser(Model):
         self._pos_tag_embedding = pos_tag_embedding
         self._mces_metric = mces_metric
 
+        node_dim = word_dim
+        if pos_tag_embedding:
+            node_dim += pos_tag_embedding.output_dim
         self.word_dim = word_dim
         self.hidden_dim = hidden_dim
         self.ratio_dim = ratio_dim
@@ -74,29 +77,29 @@ class TransitionParser(Model):
                                               trainable=False)
 
         # syntactic composition
-        self.p_comp = torch.nn.Linear(self.hidden_dim * 5 + self.ratio_dim, self.word_dim)
+        self.p_comp = torch.nn.Linear(self.hidden_dim * 5 + self.ratio_dim, node_dim)
         # parser state to hidden
         self.p_s2h = torch.nn.Linear(self.hidden_dim * 3 + self.ratio_dim, self.hidden_dim)
         # hidden to action
         self.p_act = torch.nn.Linear(self.hidden_dim + self.ratio_dim, self.num_actions)
 
-        self.update_concept_node = torch.nn.Linear(self.hidden_dim + self.ratio_dim, self.word_dim)
+        self.update_concept_node = torch.nn.Linear(self.hidden_dim + self.ratio_dim, node_dim)
 
         self.pempty_buffer_emb = torch.nn.Parameter(torch.randn(self.hidden_dim))
-        self.proot_stack_emb = torch.nn.Parameter(torch.randn(self.word_dim))
+        self.proot_stack_emb = torch.nn.Parameter(torch.randn(node_dim))
         self.pempty_action_emb = torch.nn.Parameter(torch.randn(self.hidden_dim))
         self.pempty_stack_emb = torch.nn.Parameter(torch.randn(self.hidden_dim))
 
         self._input_dropout = Dropout(input_dropout)
 
-        self.buffer = StackRnn(input_size=self.word_dim,
+        self.buffer = StackRnn(input_size=node_dim,
                                hidden_size=self.hidden_dim,
                                num_layers=num_layers,
                                recurrent_dropout_probability=recurrent_dropout_probability,
                                layer_dropout_probability=layer_dropout_probability,
                                same_dropout_mask_per_instance=same_dropout_mask_per_instance)
 
-        self.stack = StackRnn(input_size=self.word_dim,
+        self.stack = StackRnn(input_size=node_dim,
                               hidden_size=self.hidden_dim,
                               num_layers=num_layers,
                               recurrent_dropout_probability=recurrent_dropout_probability,
@@ -468,6 +471,9 @@ class TransitionParser(Model):
             oracle_actions = [[self.vocab.get_token_index(s, namespace='actions') for s in l] for l in oracle_actions]
 
         embedded_text_input = self.text_field_embedder(tokens)
+        if pos_tags is not None and self._pos_tag_embedding is not None:
+            embedded_pos_tags = self._pos_tag_embedding(pos_tags)
+            embedded_text_input = torch.cat([embedded_text_input, embedded_pos_tags], -1)
         embedded_text_input = self._input_dropout(embedded_text_input)
 
         if self.training:

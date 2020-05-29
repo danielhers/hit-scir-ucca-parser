@@ -5,7 +5,7 @@ from typing import Dict, Tuple, List
 
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import Field, TextField, MetadataField
+from allennlp.data.fields import Field, TextField, SequenceLabelField, MetadataField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import SingleIdTokenIndexer, TokenIndexer
 from allennlp.data.tokenizers import Token
@@ -267,6 +267,7 @@ class Graph(object):
         if len(tokens) != len(mrp_lemmas):
             mrp_lemmas = tokens
 
+
         ret = {"tokens": tokens,
                "tokens_range": lay_0_node_info,
                "arc_indices": arc_indices,
@@ -375,11 +376,14 @@ class UCCADatasetReaderConll2019(DatasetReader):
     def __init__(self,
                  token_indexers: Dict[str, TokenIndexer] = None,
                  lemma_indexers: Dict[str, TokenIndexer] = None,
+                 pos_tag_indexers: Dict[str, TokenIndexer] = None,
                  action_indexers: Dict[str, TokenIndexer] = None,
                  arc_tag_indexers: Dict[str, TokenIndexer] = None,
                  lazy: bool = False) -> None:
         super().__init__(lazy)
         self._token_indexers = token_indexers or {'tokens': SingleIdTokenIndexer()}
+        if pos_tag_indexers is not None and len(pos_tag_indexers) > 0:
+            self._pos_tag_indexers = pos_tag_indexers
         self._lemma_indexers = None
         if lemma_indexers is not None and len(lemma_indexers) > 0:
             self._lemma_indexers = lemma_indexers
@@ -457,6 +461,8 @@ class UCCADatasetReaderConll2019(DatasetReader):
             meta_dict["gold_actions"] = gold_actions
             fields["gold_actions"] = TextField([Token(a) for a in gold_actions], self._action_indexers)
 
+        if pos_tags is not None:
+            fields["pos_tags"] = SequenceLabelField(pos_tags, token_field, label_namespace="pos")
         if arc_descendants is not None:
             meta_dict["arc_descendants"] = arc_descendants
 
