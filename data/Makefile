@@ -4,11 +4,12 @@
 	git clone https://github.com/cfmrp/mtool $@ || git submodule init
 
 ewt:
-	git clone https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-EWT -b v1.0-sentences ewt
+	git clone https://github.com/UniversalConceptualCognitiveAnnotation/UCCA_English-EWT -b master-sentences ewt || cd ewt && git pull
 
-ewt.mrp:
-	wget -qO- http://svn.nlpl.eu/mrp/2019/public/ucca.tgz?p=28375 | tar xvz
-	cp mrp/2019/training/ucca/ewt.mrp ./
+ewt.mrp: ewt ewt.txt
+	ls -d ewt/*.pickle | python ../toolkit/mtool/main.py --read ucca --write mrp --text data/ewt.txt > $@
+#	wget -qO- http://svn.nlpl.eu/mrp/2019/public/ucca.tgz?p=28375 | tar xvz
+#	cp mrp/2019/training/ucca/ewt.mrp ./
 
 ud: en_ewt-ud.conllu en_ewt-ud-train.conllu en_ewt-ud-dev.conllu en_ewt-ud-test.conllu
 
