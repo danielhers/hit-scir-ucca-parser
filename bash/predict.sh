@@ -19,7 +19,9 @@ for split in dev test; do
   data/ewt.$split.aug.streusle.mrp
 
   mkdir -p data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split
-  python toolkit/mtool/main.py data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.mrp data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml --read mrp --write ucca
+  for i in 1 2; do # workaround - do it twice for it to work
+    python toolkit/mtool/main.py data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.mrp data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml --read mrp --write ucca && break
+  done
   csplit -zk data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml '/^<root/' -f '' -b "data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split/%03d.xml" {553}
   python toolkit/evaluate_standard.py data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev data/ewt/dev -q --summary-file ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev.scores.txt
 done
