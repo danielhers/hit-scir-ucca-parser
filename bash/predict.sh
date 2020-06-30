@@ -21,5 +21,5 @@ for split in dev test; do
   mkdir -p data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split
   python toolkit/mtool/main.py data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.mrp data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml --read mrp --write ucca
   csplit -zk data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml '/^<root/' -f '' -b "data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split/%03d.xml" {553}
-  python -m scripts.evaluate_standard data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev data/ewt/dev -q --summary-file ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev.scores.txt
+  python toolkit/evaluate_standard.py data/ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev data/ewt/dev -q --summary-file ucca-output${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev.scores.txt
 done
