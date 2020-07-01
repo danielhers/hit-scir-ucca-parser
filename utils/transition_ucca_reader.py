@@ -56,7 +56,7 @@ class Node(object):
     def add_head(self, edge):
         assert edge["target"] == self.id
         remote = False
-        if "properties" in edge and "remote" in edge["properties"]:
+        if "properties" in edge and "remote" in edge["properties"] or "attributes" in edge and "remote" in edge["attributes"]:
             remote = True
         if edge["source"] in self.head_ids:
             self.heads.append(Head(edge["source"], edge["label"], remote))
@@ -70,7 +70,7 @@ class Node(object):
         assert edge["source"] == self.id
         # assert self.anchored ==False
         remote = False
-        if "properties" in edge and "remote" in edge["properties"]:
+        if "properties" in edge and "remote" in edge["properties"] or "attributes" in edge and "remote" in edge["attributes"]:
             remote = True
         if edge["target"] in self.child_ids:
             self.childs.append(Child(edge["target"], edge["label"], remote))
