@@ -397,10 +397,7 @@ class UCCADatasetReaderConll2019(DatasetReader):
             self._arc_tag_indexers = arc_tag_indexers
         feats = ['pos_tags', 'deprels', 'bios', 'lexcat', 'ss', 'ss2']
         for feat in feats:
-            if feat in features:
-                setattr(self,feat,True)
-            else:
-                setattr(self,feat,False)
+            setattr(self, feat, feat in features)
 
 
     @overrides
