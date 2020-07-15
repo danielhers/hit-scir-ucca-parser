@@ -7,7 +7,6 @@
   },
   "dataset_reader": {
       "type": "ucca_reader_conll2019",
-      "features": ['pos_tags', 'deprels', 'bios', 'lexcat', 'ss', 'ss2'],
       "token_indexers": {
         "tokens": {
           "type": "bert-pretrained",
@@ -56,33 +55,9 @@
         "trace": 0,
         "cores": 10
     },
-    "pos_tag_embedding": {
-      "embedding_dim": 20,
-      "vocab_namespace": "pos"
-    },
     "action_embedding": {
       "embedding_dim": 50,
       "vocab_namespace": "actions"
-    },
-    "deprel_embedding": {
-        "embedding_dim": 20,
-        "vocab_namespace": "deprels"
-    },
-    "bios_embedding": {
-        "embedding_dim": 20,
-        "vocab_namespace": "bios"
-    },
-    "lexcat_embedding": {
-        "embedding_dim": 20,
-        "vocab_namespace": "lexcat"
-    },
-    "ss_embedding": {
-        "embedding_dim": 20,
-        "vocab_namespace": "ss"
-    },
-    "ss2_embedding": {
-        "embedding_dim": 20,
-        "vocab_namespace": "ss2"
     },
     "word_dim": 1024,
     "hidden_dim": 200,
