@@ -9,7 +9,7 @@ rm -rf $CHECKPOINTS
 #cd $workingdir
 
 # UCCA
-#BERT_PATH=/cluster/projects/nn9447k/bert/wwm_cased_L-24_H-1024_A-16/ \
+#BERT_PATH=/cluster/projects/nn9447k/danielhe/bert/wwm_cased_L-24_H-1024_A-16/ \
 PRETRAINED_FILE=glove/glove.6B.100d.txt \
 TRAIN_PATH=data/ewt.train.aug.streusle.debug.mrp \
 DEV_PATH=data/ewt.dev.aug.streusle.debug.mrp \
@@ -24,7 +24,7 @@ allennlp train \
 --include-package modules \
 --include-package metrics \
 --file-friendly-logging \
-config/transition_glove_ucca.jsonnet "$@"
+config/glove.jsonnet "$@"
 #config/glove_feats.jsonnet "$@"
 #config/bert.jsonnet "$@"
 #config/feats.jsonnet "$@"

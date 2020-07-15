@@ -19,4 +19,4 @@ allennlp train \
 --include-package modules \
 --include-package metrics \
 --file-friendly-logging \
-config/transition_bert_ucca.jsonnet "$@"
+config/bert.jsonnet "$@"

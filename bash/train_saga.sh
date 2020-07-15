@@ -15,7 +15,7 @@ rm -rf $CHECKPOINTS
 CUDA_DEVICE=0 \
 TRAIN_PATH=data/ewt.train.aug.streusle.mrp \
 DEV_PATH=data/ewt.dev.aug.streusle.mrp \
-BERT_PATH=/cluster/projects/nn9447k/bert/wwm_cased_L-24_H-1024_A-16/ \
+BERT_PATH=/cluster/projects/nn9447k/danielhe/bert/wwm_cased_L-24_H-1024_A-16/ \
 LOWER_CASE=FALSE \
 SEED=$RANDOM \
 BATCH_SIZE=8 \
