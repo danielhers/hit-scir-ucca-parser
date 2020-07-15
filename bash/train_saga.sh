@@ -12,6 +12,7 @@ rm -rf $CHECKPOINTS
 #workingdir='/cluster/work/users/mdelhoneux/hit-scir-ucca-parser'
 #cd $workingdir
 
+CUDA_VISIBLE_DEVICES=0 \
 CUDA_DEVICE=0 \
 TRAIN_PATH=data/ewt.train.aug.streusle.mrp \
 DEV_PATH=data/ewt.dev.aug.streusle.mrp \
