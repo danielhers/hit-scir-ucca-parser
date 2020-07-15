@@ -26,6 +26,6 @@ allennlp train \
 --include-package modules \
 --include-package metrics \
 --file-friendly-logging \
-config/$exp.jsonnet "$@"
-#config/bert.jsonnet "$@"
-#config/bert_feats.jsonnet "$@"
+config/$exp.jsonnet
+#config/bert.jsonnet
+#config/bert_feats.jsonnet
