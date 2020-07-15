@@ -2,7 +2,7 @@
 #SBATCH --account=nn9447k
 #SBATCH --partition=accel
 #SBATCH --gres=gpu:1
-#SBATCH --mem=30G
+#SBATCH --mem-per-cpu=20G
 #SBATCH --time=5-0
 #SBATCH --array=1-3%1
 
