@@ -74,18 +74,10 @@ class TransitionParser(Model):
         node_dim = 0
         if self.text_field_embedder:
             node_dim += word_dim
-        if pos_tag_embedding:
-            node_dim += pos_tag_embedding.output_dim
-        if deprel_embedding:
-            node_dim += deprel_embedding.output_dim
-        if bios_embedding:
-            node_dim += bios_embedding.output_dim
-        if lexcat_embedding:
-            node_dim += lexcat_embedding.output_dim
-        if ss_embedding:
-            node_dim += ss_embedding.output_dim
-        if ss2_embedding:
-            node_dim += ss2_embedding.output_dim
+        for embedding in pos_tag_embedding, deprel_embedding, bios_embedding, lexcat_embedding, ss_embedding, \
+                         ss2_embedding:
+            if embedding:
+                node_dim += embedding.output_dim
         self.node_dim = node_dim
         self.word_dim = word_dim
         self.hidden_dim = hidden_dim
