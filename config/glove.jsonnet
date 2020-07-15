@@ -3,8 +3,7 @@
   "numpy_seed": std.extVar('SEED'),
   "pytorch_seed": std.extVar('SEED'),
   "vocabulary": {
-    "non_padded_namespaces": [
-    ],
+    "non_padded_namespaces": [],
   },
   "dataset_reader": {
       "type": "ucca_reader_conll2019",

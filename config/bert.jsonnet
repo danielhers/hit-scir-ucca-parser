@@ -7,6 +7,7 @@
   },
   "dataset_reader": {
       "type": "ucca_reader_conll2019",
+      "features": [],
       "token_indexers": {
         "tokens": {
           "type": "bert-pretrained",
