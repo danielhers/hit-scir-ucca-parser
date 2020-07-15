@@ -3,16 +3,27 @@
   "numpy_seed": std.extVar('SEED'),
   "pytorch_seed": std.extVar('SEED'),
   "vocabulary": {
-    "non_padded_namespaces": []
+    "non_padded_namespaces": [
+    ],
   },
   "dataset_reader": {
       "type": "ucca_reader_conll2019",
       "features": ['pos_tags', 'deprels', 'bios', 'lexcat', 'ss', 'ss2'],
       "token_indexers": {
         "tokens": {
-          "type": "bert-pretrained",
-          "pretrained_model": std.extVar('BERT_PATH'),
-          "do_lowercase": std.extVar('LOWER_CASE')=='TRUE'
+          "type": "single_id",
+          "namespace": "tokens",
+          "lowercase_tokens": true,
+        },
+        "token_characters": {
+          "type": "characters",
+          "namespace": "token_characters",
+        }
+      },
+      "lemma_indexers": {
+        "lemmas": {
+          "type": "single_id",
+          "namespace": "lemmas"
         }
       },
       "action_indexers": {
@@ -40,15 +51,30 @@
     "type": "transition_parser_ucca",
     "text_field_embedder": {
       "tokens": {
-        "type": "bert-pretrained",
-        "pretrained_model": std.extVar('BERT_PATH'),
-        "requires_grad": true,
-        "top_layer_only": false
+        "type": "embedding",
+        "vocab_namespace": "tokens",
+        "embedding_dim": 100,
+        "pretrained_file": std.extVar('PRETRAINED_FILE'),
+        "trainable": false,
       },
-      "embedder_to_indexer_map": {
-        "tokens": ["tokens", "tokens-offsets", "tokens-type-ids"]
-      },
-      "allow_unmatched_keys": true
+      "token_characters": {
+        "type": "my_character_encoding",
+        "embedding": {
+          "embedding_dim": 100,
+          "vocab_namespace": "token_characters",
+          "trainable": true,
+        },
+        "encoder": {
+          "type": "alternating_lstm",
+          "input_size": 100,
+          "hidden_size": 400,
+          "num_layers": 1,
+          "recurrent_dropout_probability": 0.33,
+          "use_highway": true
+        },
+        "projection_dim": 100,
+        "dropout": 0.0
+      }
     },
     "mces_metric": {
         "type": "mces",
@@ -59,10 +85,6 @@
     "pos_tag_embedding": {
       "embedding_dim": 20,
       "vocab_namespace": "pos"
-    },
-    "action_embedding": {
-      "embedding_dim": 50,
-      "vocab_namespace": "actions"
     },
     "deprel_embedding": {
         "embedding_dim": 20,
@@ -84,8 +106,20 @@
         "embedding_dim": 20,
         "vocab_namespace": "ss2"
     },
-    "word_dim": 1024,
-    "hidden_dim": 200,
+    "action_embedding": {
+      "embedding_dim": 50,
+      "vocab_namespace": "actions"
+    },
+    "lemma_text_field_embedder": {
+      "lemmas": {
+        "type": "embedding",
+        "vocab_namespace": "lemmas",
+        "embedding_dim": 25,
+        "trainable": false,
+      }
+    },
+    "word_dim": 200,
+    "hidden_dim": 300,
     "action_dim": 50,
     "ratio_dim" : 1,
     "num_layers": 2,
@@ -105,35 +139,20 @@
   "iterator": {
     "type": "bucket",
     "sorting_keys": [["tokens", "num_tokens"]],
-    "batch_size": std.parseInt(std.extVar('BATCH_SIZE')),
-    "max_instances_in_memory": 1
+    "batch_size": std.extVar('BATCH_SIZE')
   },
   "trainer": {
-    "num_epochs": std.parseInt(std.extVar('EPOCHS')),
+    "num_epochs": 200,
     "grad_norm": 5.0,
     "grad_clipping": 5.0,
-    "patience": 5,
+    "patience": 15,
     "cuda_device": std.parseInt(std.extVar('CUDA_DEVICE')),
     "validation_metric": "+all-f",
     "optimizer": {
       "type": "adam",
-      "parameter_groups": [
-        [[".*bert.*"], {"lr": 5e-5}],
-        [["^((?!bert).)*$"], {}]
-      ],
       "betas": [0.9, 0.999],
       "lr": 1e-3
     },
-    "learning_rate_scheduler": {
-      "type": "slanted_triangular",
-      "num_epochs": std.parseInt(std.extVar('EPOCHS')),
-      "num_steps_per_epoch": 1000,
-      "cut_frac": 0.1,
-      "ratio": 32,
-      "gradual_unfreezing": true,
-      "discriminative_fine_tuning": true,
-      "decay_factor": 1.0,
-    },
-    "num_serialized_models_to_keep": 50
+    "num_serialized_models_to_keep": 1
   }
 }

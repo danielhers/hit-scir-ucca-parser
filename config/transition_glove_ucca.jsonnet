@@ -8,6 +8,7 @@
   },
   "dataset_reader": {
       "type": "ucca_reader_conll2019",
+      "features": [],
       "token_indexers": {
         "tokens": {
           "type": "single_id",
@@ -30,6 +31,12 @@
           "type": "single_id",
           "namespace": "actions"
         }
+      },
+      "pos_tag_indexers": {
+          "pos_tags": {
+              "type": "single_id",
+              "namespace": "pos_tags"
+          }
       },
       "arc_tag_indexers": {
         "arc_tags": {
@@ -75,6 +82,10 @@
         "trace": 0,
         "cores": 10
     },
+    "action_embedding": {
+        "embedding_dim": 50,
+        "vocab_namespace": "actions"
+    },
     "lemma_text_field_embedder": {
       "lemmas": {
         "type": "embedding",
@@ -82,14 +93,6 @@
         "embedding_dim": 25,
         "trainable": false,
       }
-    },
-    "pos_tag_embedding": {
-      "embedding_dim": 25,
-      "vocab_namespace": "pos",
-    },
-    "action_embedding": {
-      "embedding_dim": 50,
-      "vocab_namespace": "actions",
     },
     "word_dim": 200,
     "hidden_dim": 300,
@@ -118,7 +121,7 @@
     "num_epochs": 200,
     "grad_norm": 5.0,
     "grad_clipping": 5.0,
-    "patience": 50,
+    "patience": 15,
     "cuda_device": std.parseInt(std.extVar('CUDA_DEVICE')),
     "validation_metric": "+all-f",
     "optimizer": {

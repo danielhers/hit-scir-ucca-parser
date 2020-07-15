@@ -5,7 +5,7 @@ from typing import Dict, Tuple, List
 
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
-from allennlp.data.fields import Field, TextField, MetadataField
+from allennlp.data.fields import Field, TextField, SequenceLabelField, MetadataField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import SingleIdTokenIndexer, TokenIndexer
 from allennlp.data.tokenizers import Token
@@ -268,6 +268,7 @@ class Graph(object):
         if len(tokens) != len(mrp_lemmas):
             mrp_lemmas = tokens
 
+
         ret = {"tokens": tokens,
                "tokens_range": lay_0_node_info,
                "arc_indices": arc_indices,
@@ -376,11 +377,15 @@ class UCCADatasetReaderConll2019(DatasetReader):
     def __init__(self,
                  token_indexers: Dict[str, TokenIndexer] = None,
                  lemma_indexers: Dict[str, TokenIndexer] = None,
+                 pos_tag_indexers: Dict[str, TokenIndexer] = None,
                  action_indexers: Dict[str, TokenIndexer] = None,
                  arc_tag_indexers: Dict[str, TokenIndexer] = None,
+                 features: List[str] = [],
                  lazy: bool = False) -> None:
         super().__init__(lazy)
         self._token_indexers = token_indexers or {'tokens': SingleIdTokenIndexer()}
+        if pos_tag_indexers is not None and len(pos_tag_indexers) > 0:
+            self._pos_tag_indexers = pos_tag_indexers
         self._lemma_indexers = None
         if lemma_indexers is not None and len(lemma_indexers) > 0:
             self._lemma_indexers = lemma_indexers
@@ -390,6 +395,13 @@ class UCCADatasetReaderConll2019(DatasetReader):
         self._arc_tag_indexers = None
         if arc_tag_indexers is not None and len(arc_tag_indexers) > 0:
             self._arc_tag_indexers = arc_tag_indexers
+        feats = ['pos_tags', 'deprels', 'bios', 'lexcat', 'ss', 'ss2']
+        for feat in feats:
+            if feat in features:
+                setattr(self,feat,True)
+            else:
+                setattr(self,feat,False)
+
 
     @overrides
     def _read(self, file_path: str):
@@ -408,6 +420,17 @@ class UCCADatasetReaderConll2019(DatasetReader):
                 meta_info = ret["meta_info"] if "meta_info" in ret else None
                 tokens_range = ret["tokens_range"] if "tokens_range" in ret else None
                 gold_mrps = ret["gold_mrps"] if "gold_mrps" in ret else None
+                companion = json.loads(ret['meta_info'])['companion']
+                deprels = []
+                lex_infos = []
+                for tok in companion['toks']:
+                    deprels.append(tok['deprel'])
+                    #TODO: properly unk this
+                    lex_info = 4*['_']
+                    lextags = tok['lextag'].split('-')
+                    for i, info in enumerate(lextags):
+                        lex_info[i] = info
+                    lex_infos.append(lex_info)
 
                 concept_node_expect_root = ret["concept_node_expect_root"] if "concept_node_expect_root" in ret else None
 
@@ -427,7 +450,7 @@ class UCCADatasetReaderConll2019(DatasetReader):
                     print('-E-')
                     continue
                 yield self.text_to_instance(tokens, lemmas, pos_tags, arc_indices, arc_tags, gold_actions,
-                                            arc_descendants, [root_id], [meta_info], tokens_range, [gold_mrps])
+                                            arc_descendants, [root_id], [meta_info], tokens_range, [gold_mrps], deprels, lex_infos)
 
     @overrides
     def text_to_instance(self,  # type: ignore
@@ -441,7 +464,9 @@ class UCCADatasetReaderConll2019(DatasetReader):
                          root_id: List[int] = None,
                          meta_info: List[str] = None,
                          tokens_range: List[Tuple[int, int]] = None,
-                         gold_mrps: List[str] = None) -> Instance:
+                         gold_mrps: List[str] = None,
+                         deprels: List[str] = None,
+                         lex_infos: List[List[str]] = None) -> Instance:
         # pylint: disable=arguments-differ
         fields: Dict[str, Field] = {}
         token_field = TextField([Token(t) for t in tokens], self._token_indexers)
@@ -458,6 +483,8 @@ class UCCADatasetReaderConll2019(DatasetReader):
             meta_dict["gold_actions"] = gold_actions
             fields["gold_actions"] = TextField([Token(a) for a in gold_actions], self._action_indexers)
 
+        if pos_tags is not None and self.pos_tags:
+            fields["pos_tags"] = SequenceLabelField(pos_tags, token_field, label_namespace="pos")
         if arc_descendants is not None:
             meta_dict["arc_descendants"] = arc_descendants
 
@@ -472,6 +499,19 @@ class UCCADatasetReaderConll2019(DatasetReader):
 
         if gold_mrps is not None:
             meta_dict["gold_mrps"] = gold_mrps[0]
+        if deprels is not None and self.deprels:
+            fields["deprels"] = SequenceLabelField(deprels, token_field, label_namespace="deprels")
+
+        if lex_infos is not None:
+            bios, lexcat, ss, ss2 = zip(*tuple(lex_infos))
+            if self.bios:
+                fields["bios"] = SequenceLabelField(bios, token_field, label_namespace="bios")
+            if self.lexcat:
+                fields["lexcat"] = SequenceLabelField(lexcat, token_field, label_namespace="lexcat")
+            if self.ss:
+                fields["ss"] = SequenceLabelField(ss, token_field, label_namespace="ss")
+            if self.ss2:
+                fields["ss2"] = SequenceLabelField(ss2, token_field, label_namespace="ss2")
 
         fields["metadata"] = MetadataField(meta_dict)
 

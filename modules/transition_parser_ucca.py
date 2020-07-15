@@ -19,12 +19,12 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 class TransitionParser(Model):
     def __init__(self,
                  vocab: Vocabulary,
-                 text_field_embedder: TextFieldEmbedder,
-                 word_dim: int,
                  hidden_dim: int,
                  action_dim: int,
                  ratio_dim: int,
                  num_layers: int,
+                 word_dim: int = 0,
+                 text_field_embedder: TextFieldEmbedder = None,
                  mces_metric: Metric = None,
                  recurrent_dropout_probability: float = 0.0,
                  layer_dropout_probability: float = 0.0,
@@ -32,6 +32,11 @@ class TransitionParser(Model):
                  input_dropout: float = 0.0,
                  lemma_text_field_embedder: TextFieldEmbedder = None,
                  pos_tag_embedding: Embedding = None,
+                 deprel_embedding: Embedding = None,
+                 bios_embedding: Embedding = None,
+                 lexcat_embedding: Embedding = None,
+                 ss_embedding: Embedding = None,
+                 ss2_embedding: Embedding = None,
                  action_embedding: Embedding = None,
                  initializer: InitializerApplicator = InitializerApplicator(),
                  regularizer: Optional[RegularizerApplicator] = None
@@ -59,8 +64,29 @@ class TransitionParser(Model):
         self.text_field_embedder = text_field_embedder
         self.lemma_text_field_embedder = lemma_text_field_embedder
         self._pos_tag_embedding = pos_tag_embedding
+        self._deprel_embedding = deprel_embedding
+        self._bios_embedding = bios_embedding
+        self._lexcat_embedding = lexcat_embedding
+        self._ss_embedding = ss_embedding
+        self._ss2_embedding = ss2_embedding
         self._mces_metric = mces_metric
 
+        node_dim = 0
+        if self.text_field_embedder:
+            node_dim += word_dim
+        if pos_tag_embedding:
+            node_dim += pos_tag_embedding.output_dim
+        if deprel_embedding:
+            node_dim += deprel_embedding.output_dim
+        if bios_embedding:
+            node_dim += bios_embedding.output_dim
+        if lexcat_embedding:
+            node_dim += lexcat_embedding.output_dim
+        if ss_embedding:
+            node_dim += ss_embedding.output_dim
+        if ss2_embedding:
+            node_dim += ss2_embedding.output_dim
+        self.node_dim = node_dim
         self.word_dim = word_dim
         self.hidden_dim = hidden_dim
         self.ratio_dim = ratio_dim
@@ -74,29 +100,29 @@ class TransitionParser(Model):
                                               trainable=False)
 
         # syntactic composition
-        self.p_comp = torch.nn.Linear(self.hidden_dim * 5 + self.ratio_dim, self.word_dim)
+        self.p_comp = torch.nn.Linear(self.hidden_dim * 5 + self.ratio_dim, node_dim)
         # parser state to hidden
         self.p_s2h = torch.nn.Linear(self.hidden_dim * 3 + self.ratio_dim, self.hidden_dim)
         # hidden to action
         self.p_act = torch.nn.Linear(self.hidden_dim + self.ratio_dim, self.num_actions)
 
-        self.update_concept_node = torch.nn.Linear(self.hidden_dim + self.ratio_dim, self.word_dim)
+        self.update_concept_node = torch.nn.Linear(self.hidden_dim + self.ratio_dim, node_dim)
 
         self.pempty_buffer_emb = torch.nn.Parameter(torch.randn(self.hidden_dim))
-        self.proot_stack_emb = torch.nn.Parameter(torch.randn(self.word_dim))
+        self.proot_stack_emb = torch.nn.Parameter(torch.randn(node_dim))
         self.pempty_action_emb = torch.nn.Parameter(torch.randn(self.hidden_dim))
         self.pempty_stack_emb = torch.nn.Parameter(torch.randn(self.hidden_dim))
 
         self._input_dropout = Dropout(input_dropout)
 
-        self.buffer = StackRnn(input_size=self.word_dim,
+        self.buffer = StackRnn(input_size=node_dim,
                                hidden_size=self.hidden_dim,
                                num_layers=num_layers,
                                recurrent_dropout_probability=recurrent_dropout_probability,
                                layer_dropout_probability=layer_dropout_probability,
                                same_dropout_mask_per_instance=same_dropout_mask_per_instance)
 
-        self.stack = StackRnn(input_size=self.word_dim,
+        self.stack = StackRnn(input_size=node_dim,
                               hidden_size=self.hidden_dim,
                               num_layers=num_layers,
                               recurrent_dropout_probability=recurrent_dropout_probability,
@@ -455,6 +481,11 @@ class TransitionParser(Model):
                 lemmas: Dict[str, torch.LongTensor] = None,
                 pos_tags: torch.LongTensor = None,
                 arc_tags: torch.LongTensor = None,
+                deprels: torch.LongTensor = None,
+                bios: torch.LongTensor = None,
+                lexcat: torch.LongTensor = None,
+                ss: torch.LongTensor = None,
+                ss2: torch.LongTensor = None,
                 ) -> Dict[str, torch.LongTensor]:
 
         batch_size = len(metadata)
@@ -467,7 +498,26 @@ class TransitionParser(Model):
             oracle_actions = [d['gold_actions'] for d in metadata]
             oracle_actions = [[self.vocab.get_token_index(s, namespace='actions') for s in l] for l in oracle_actions]
 
-        embedded_text_input = self.text_field_embedder(tokens)
+        embedded_words = embedded_pos_tags = embedded_deprels = embedded_bios = embedded_lexcat = embedded_ss = embedded_ss2 = None
+        if self.text_field_embedder:
+            embedded_words = self.text_field_embedder(tokens)
+        if pos_tags is not None and self._pos_tag_embedding is not None:
+            embedded_pos_tags = self._pos_tag_embedding(pos_tags)
+        if deprels is not None and self._deprel_embedding is not None:
+            embedded_deprels = self._deprel_embedding(deprels)
+        if bios is not None and self._bios_embedding is not None:
+            embedded_bios = self._bios_embedding(bios)
+        if lexcat is not None and self._lexcat_embedding is not None:
+            embedded_lexcat = self._lexcat_embedding(lexcat)
+        if ss is not None and self._ss_embedding is not None:
+            embedded_ss = self._ss_embedding(ss)
+        if ss2 is not None and self._ss2_embedding is not None:
+            embedded_ss2 = self._ss2_embedding(ss2)
+        embeds = [embed for embed in [embedded_words, embedded_pos_tags, embedded_deprels, embedded_bios, embedded_lexcat, embedded_ss, embedded_ss2] if embed is not None]
+        if len(embeds)>1:
+            embedded_text_input = torch.cat(embeds, -1)
+        else:
+            embedded_text_input = embeds[0]
         embedded_text_input = self._input_dropout(embedded_text_input)
 
         if self.training:
