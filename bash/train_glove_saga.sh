@@ -27,6 +27,6 @@ allennlp train \
 --include-package metrics \
 --file-friendly-logging \
 config/$exp.jsonnet "$@"
-#config/all_feats.jsonnet "$@"
-#config/transition_glove_ucca.jsonnet "$@"
-#config/transition_glove_feats.jsonnet "$@"
+#config/feats.jsonnet "$@"
+#config/glove.jsonnet "$@"
+#config/glove_feats.jsonnet "$@"

@@ -25,7 +25,7 @@ allennlp train \
 --include-package metrics \
 --file-friendly-logging \
 config/transition_glove_ucca.jsonnet "$@"
-#config/transition_glove_feats.jsonnet "$@"
-#config/transition_bert_ucca.jsonnet "$@"
-#config/all_feats.jsonnet "$@"
-#config/transition_bert_feats.jsonnet "$@"
+#config/glove_feats.jsonnet "$@"
+#config/bert.jsonnet "$@"
+#config/feats.jsonnet "$@"
+#config/bert_feats.jsonnet "$@"

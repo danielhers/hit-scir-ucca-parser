@@ -27,5 +27,5 @@ allennlp train \
 --include-package metrics \
 --file-friendly-logging \
 config/$exp.jsonnet "$@"
-#config/transition_bert_ucca.jsonnet "$@"
-#config/transition_bert_feats.jsonnet "$@"
+#config/bert.jsonnet "$@"
+#config/bert_feats.jsonnet "$@"
