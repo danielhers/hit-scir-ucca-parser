@@ -482,7 +482,6 @@ class TransitionParser(Model):
 
         batch_size = len(metadata)
         sent_len = [len(d['tokens']) for d in metadata]
-        meta_tokens = [d['tokens'] for d in metadata]
         meta_info = [d['meta_info'] for d in metadata]
 
         oracle_actions = None
@@ -490,26 +489,15 @@ class TransitionParser(Model):
             oracle_actions = [d['gold_actions'] for d in metadata]
             oracle_actions = [[self.vocab.get_token_index(s, namespace='actions') for s in l] for l in oracle_actions]
 
-        embedded_words = embedded_pos_tags = embedded_deprels = embedded_bios = embedded_lexcat = embedded_ss = embedded_ss2 = None
-        if self.text_field_embedder:
-            embedded_words = self.text_field_embedder(tokens)
-        if pos_tags is not None and self._pos_tag_embedding is not None:
-            embedded_pos_tags = self._pos_tag_embedding(pos_tags)
-        if deprels is not None and self._deprel_embedding is not None:
-            embedded_deprels = self._deprel_embedding(deprels)
-        if bios is not None and self._bios_embedding is not None:
-            embedded_bios = self._bios_embedding(bios)
-        if lexcat is not None and self._lexcat_embedding is not None:
-            embedded_lexcat = self._lexcat_embedding(lexcat)
-        if ss is not None and self._ss_embedding is not None:
-            embedded_ss = self._ss_embedding(ss)
-        if ss2 is not None and self._ss2_embedding is not None:
-            embedded_ss2 = self._ss2_embedding(ss2)
-        embeds = [embed for embed in [embedded_words, embedded_pos_tags, embedded_deprels, embedded_bios, embedded_lexcat, embedded_ss, embedded_ss2] if embed is not None]
-        if len(embeds)>1:
-            embedded_text_input = torch.cat(embeds, -1)
-        else:
-            embedded_text_input = embeds[0]
+        embeds = [embedder(field) for field, embedder in ((tokens, self.text_field_embedder),
+                                                          (pos_tags, self._pos_tag_embedding),
+                                                          (deprels, self._deprel_embedding),
+                                                          (bios, self._bios_embedding),
+                                                          (lexcat, self._lexcat_embedding),
+                                                          (ss, self._ss_embedding),
+                                                          (ss2, self._ss2_embedding))
+                  if field is not None and embedder is not None]
+        embedded_text_input = torch.cat(embeds, -1) if len(embeds) > 1 else embeds[0]
         embedded_text_input = self._input_dropout(embedded_text_input)
 
         if self.training:
