@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --account=nn9447k
 #SBATCH --mem=30G
 #SBATCH --time=0-1
 #SBATCH --array=1-3
