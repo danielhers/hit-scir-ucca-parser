@@ -12,6 +12,7 @@ CUDA_VISIBLE_DEVICES=0 \
 CUDA_DEVICE=0 \
 TRAIN_PATH=data/ewt.train.aug.streusle.mrp \
 DEV_PATH=data/ewt.dev.aug.streusle.mrp \
+PRETRAINED_FILE=glove/glove.6B.100d.txt \
 BERT_PATH=/science/image/nlp-letre/bert/wwm_cased_L-24_H-1024_A-16/ \
 LOWER_CASE=FALSE \
 SEED=$RANDOM \
