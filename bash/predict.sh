@@ -24,5 +24,5 @@ for split in dev test; do
       python toolkit/mtool/main.py data/$exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.streusle.mrp data/$exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml --read mrp --write ucca
   done
   csplit -zk data/$exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split.xml '/^<root/' -f '' -b "data/$exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.$split/%03d.xml" {553}
-  python -m semstr.evaluate data/$exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev data/ewt/dev -qs $exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev.scores.txt
+  python toolkit/evaluate_standard.py data/$exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev data/ewt/dev -q --summary-file $exp${PREFIX:-}$SLURM_ARRAY_TASK_ID.dev.scores.txt
 done
