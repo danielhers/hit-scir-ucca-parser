@@ -441,7 +441,7 @@ class TransitionParser(Model):
         # categorical cross-entropy
         non_empty_losses = [torch.sum(torch.stack(cur_loss)) for cur_loss in losses if len(cur_loss) > 0]
         _loss_CCE = -torch.sum(torch.stack(non_empty_losses)) / sum([len(cur_loss) for cur_loss in losses]) \
-            if non_empty_losses else torch.Tensor(float('NaN'))
+            if non_empty_losses else torch.Tensor([float('NaN')])
 
         _loss = _loss_CCE
 
