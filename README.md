@@ -22,9 +22,17 @@ This repository accompanies the [COLING 2020](https://coling2020.org/) paper [Co
 }
 ```
 
-This code is based on [the repository](https://github.com/DreamerDeo/HIT-SCIR-CoNLL2019) that accompanies the paper
+The code is based on [the repository](https://github.com/DreamerDeo/HIT-SCIR-CoNLL2019), which accompanies the paper
 [HIT-SCIR at MRP 2019: A Unified Pipeline for Meaning Representation Parsing via Efficient Training and Effective Encoding](https://www.aclweb.org/anthology/K19-2007.pdf) from the [CoNLL MRP 2019 Shared Task on Cross-Framework Meaning Representation Parsing](http://mrp.nlpl.eu/2019/),
 providing code to train models and pre/post-process the MRP dataset.
+
+Changes from the original implementation are:
+* Deletion of non-UCCA parsing code, for simplicity. The original code also targeted DM, PSD, EDS and AMR.
+* Addition of scripts for interoperability with the UCCA [XML format](https://github.com/UniversalConceptualCognitiveAnnotation/docs/blob/master/FORMAT.md), under [`bash/mrp2xml.sh`](bash/mrp2xml.sh). The original code only supports the [MRP format](http://mrp.nlpl.eu/2019/index.php?page=4).
+* Support for additional features in the input to (the parser model)[modules/transition_parser_ucca.py].
+* Modification of the [preprocessing](toolkit/augment_data_conllu.py) [scripts](toolkit/augment_data_conllulex.py ) and [data reader](utils/transition_ucca_reader.py) such that the preprocessing now do the CoNLL-U format parsing and save the attributes in a `dict`, rather than saving it as a CoNLL-U string. The data reader therefore does not need to use the `conllu` library and can simply read the attributes from the `companion` field.
+* Fix to read edge `attributes` from the MRP data and not edge `properties` (following the renaming of this element in the MRP format).
+* Experiments with various settings, differing by input features (listed in the paper), under [`config/`](config).
 
 ## Pre-requisites
 
