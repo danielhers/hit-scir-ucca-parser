@@ -34,6 +34,8 @@ Changes from the original implementation are:
 * Fix to read edge `attributes` from the MRP data and not edge `properties` (following the renaming of this element in the MRP format).
 * Experiments with various settings, differing by input features (listed in the paper), under [`config/`](config).
 
+See [`REPLICATING.md`](REPLICATING.md) for instructions on replicating the experiments reported in the paper.
+
 ## Pre-requisites
 
 - Python 3.6
@@ -43,11 +45,6 @@ Changes from the original implementation are:
 
 The full MRP training data is available at [mrp-data].
 Specifically, we use the publicly available [UCCA data in MRP format](http://svn.nlpl.eu/mrp/2019/public/ucca.tgz?p=28375).
-
-## Model
-
-Download the pre-trained model from [google-drive] (CoNLL2019 Submission Version). 
-For prediction, please specify the BERT path in `config.json` to import the bert-indexer and bert-embedder.
 
 ## Usage
 
